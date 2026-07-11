@@ -1,0 +1,1583 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dossier — Resume &amp; Portfolio Builder</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&family=Playfair+Display:ital,wght@0,500;0,700;1,500&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<style>
+/* ============ TOKENS ============ */
+:root{
+  --paper:#F7F5F0;
+  --paper-alt:#EFEAE0;
+  --paper-card:#FFFFFF;
+  --ink:#1B2430;
+  --ink-soft:#5B6472;
+  --ink-faint:#8A93A0;
+  --rule:#D8D2C4;
+  --brass:#A8823C;
+  --slate:#3D5A6C;
+  --sage:#5F7D5B;
+  --burgundy:#8C3B3B;
+  --accent:var(--brass);
+  --shadow: 0 1px 2px rgba(27,36,48,.06), 0 8px 24px rgba(27,36,48,.08);
+  --radius: 2px;
+  --font-display:'Fraunces', serif;
+  --font-body:'IBM Plex Sans', sans-serif;
+  --font-mono:'IBM Plex Mono', monospace;
+  --font-serif:'Playfair Display', serif;
+  --font-geo:'Space Grotesk', sans-serif;
+}
+*{box-sizing:border-box;}
+html,body{margin:0;padding:0;}
+body{
+  background:var(--paper);
+  color:var(--ink);
+  font-family:var(--font-body);
+  line-height:1.5;
+  -webkit-font-smoothing:antialiased;
+}
+h1,h2,h3,h4{font-family:var(--font-display); margin:0; font-weight:600; color:var(--ink);}
+p{margin:0;}
+button{font-family:var(--font-body); cursor:pointer;}
+a{color:var(--accent);}
+::selection{background:var(--accent); color:#fff;}
+:focus-visible{outline:2px solid var(--accent); outline-offset:2px;}
+
+.mono{font-family:var(--font-mono); letter-spacing:.04em;}
+.eyebrow{
+  font-family:var(--font-mono); font-size:11px; letter-spacing:.14em; text-transform:uppercase;
+  color:var(--accent); display:inline-flex; align-items:center; gap:8px;
+}
+.eyebrow::before{content:''; width:18px; height:1px; background:var(--accent); display:inline-block;}
+
+.screen{display:none;}
+.screen.active{display:block;}
+
+/* ============ BUTTONS ============ */
+.btn{
+  font-family:var(--font-mono); font-size:13px; letter-spacing:.06em; text-transform:uppercase;
+  padding:14px 26px; border-radius:var(--radius); border:1px solid var(--ink); background:transparent;
+  color:var(--ink); transition:background .15s ease, color .15s ease, transform .1s ease;
+}
+.btn:hover{background:var(--ink); color:var(--paper);}
+.btn:active{transform:translateY(1px);}
+.btn-primary{background:var(--ink); color:var(--paper);}
+.btn-primary:hover{background:var(--accent); border-color:var(--accent); color:#fff;}
+.btn-accent{background:var(--accent); border-color:var(--accent); color:#fff;}
+.btn-accent:hover{opacity:.88;}
+.btn-ghost{border-color:var(--rule); color:var(--ink-soft);}
+.btn-ghost:hover{background:var(--paper-alt); color:var(--ink);}
+.btn-sm{padding:8px 14px; font-size:11px;}
+.btn:disabled{opacity:.35; pointer-events:none;}
+
+/* ============ LANDING ============ */
+.landing-wrap{max-width:1080px; margin:0 auto; padding:64px 32px 40px;}
+.landing-header{display:flex; justify-content:space-between; align-items:center; margin-bottom:80px;}
+.brand{font-family:var(--font-display); font-weight:700; font-size:20px; letter-spacing:.01em;}
+.brand span{color:var(--accent);}
+.hero{display:grid; grid-template-columns:1.15fr .85fr; gap:56px; align-items:end; padding-bottom:56px; border-bottom:1px solid var(--rule);}
+.hero h1{font-size:clamp(40px,5.6vw,68px); line-height:1.03; letter-spacing:-.01em; margin:18px 0 22px;}
+.hero h1 em{font-style:italic; color:var(--accent);}
+.hero-sub{font-size:17px; color:var(--ink-soft); max-width:46ch; margin-bottom:32px;}
+.hero-cta{display:flex; gap:14px; align-items:center; flex-wrap:wrap;}
+.hero-note{font-family:var(--font-mono); font-size:11px; color:var(--ink-faint); margin-top:14px;}
+.hero-card{
+  background:var(--paper-card); border:1px solid var(--rule); box-shadow:var(--shadow);
+  padding:26px; transform:rotate(1.3deg); position:relative;
+}
+.hero-card::before{
+  content:'DRAFT No. 001'; position:absolute; top:14px; right:16px; font-family:var(--font-mono);
+  font-size:10px; letter-spacing:.1em; color:var(--ink-faint);
+}
+.hero-card h3{font-size:18px; margin-bottom:10px;}
+.hero-card .fake-line{height:8px; background:var(--paper-alt); border-radius:2px; margin-bottom:9px;}
+.hero-card .fake-line.w60{width:60%;} .hero-card .fake-line.w80{width:80%;} .hero-card .fake-line.w40{width:40%;}
+.hero-card .fake-skill{display:inline-block; padding:5px 10px; margin:3px 4px 0 0; font-family:var(--font-mono); font-size:10px; border:1px solid var(--rule); color:var(--ink-soft);}
+
+.features{display:grid; grid-template-columns:repeat(3,1fr); gap:22px; margin-top:56px;}
+.feature-card{
+  background:var(--paper-card); border:1px solid var(--rule); padding:26px 22px; position:relative;
+}
+.feature-card .num{font-family:var(--font-mono); font-size:11px; color:var(--accent); display:block; margin-bottom:14px;}
+.feature-card h4{font-size:17px; margin-bottom:8px;}
+.feature-card p{font-size:14px; color:var(--ink-soft);}
+.landing-footer{margin-top:64px; padding-top:22px; border-top:1px solid var(--rule); display:flex; justify-content:space-between; font-family:var(--font-mono); font-size:11px; color:var(--ink-faint);}
+
+/* ============ SURVEY ============ */
+.survey-shell{max-width:1080px; margin:0 auto; padding:40px 32px 80px; display:grid; grid-template-columns:230px 1fr; gap:40px;}
+.survey-top{max-width:1080px; margin:0 auto; padding:26px 32px 0; display:flex; justify-content:space-between; align-items:center;}
+.tabs{position:sticky; top:26px; align-self:start;}
+.tab-list{list-style:none; margin:0; padding:0; border-left:1px solid var(--rule);}
+.tab-item{
+  font-family:var(--font-mono); font-size:12px; color:var(--ink-faint); padding:10px 0 10px 18px;
+  border-left:2px solid transparent; margin-left:-1px; cursor:default; transition:color .15s;
+}
+.tab-item .tnum{display:inline-block; width:22px; color:var(--ink-faint);}
+.tab-item.done{color:var(--ink-soft);}
+.tab-item.done .tnum::after{content:'✓'; color:var(--sage);}
+.tab-item.current{color:var(--ink); border-left-color:var(--accent); font-weight:600;}
+.tab-item.current .tnum{color:var(--accent);}
+
+.survey-card{background:var(--paper-card); border:1px solid var(--rule); box-shadow:var(--shadow); padding:40px 44px;}
+.step{display:none;}
+.step.active{display:block; animation:fadein .25s ease;}
+@keyframes fadein{from{opacity:0; transform:translateY(4px);} to{opacity:1; transform:translateY(0);}}
+.step-head{margin-bottom:26px;}
+.step-head .eyebrow{margin-bottom:10px;}
+.step-head h2{font-size:26px;}
+.step-help{font-size:13px; color:var(--ink-soft); margin-top:6px;}
+
+.field-grid{display:grid; grid-template-columns:1fr 1fr; gap:18px;}
+.field{margin-bottom:18px;}
+.field.full{grid-column:1/-1;}
+.field label{display:block; font-family:var(--font-mono); font-size:11px; text-transform:uppercase; letter-spacing:.07em; color:var(--ink-soft); margin-bottom:7px;}
+.field label .req{color:var(--burgundy);}
+.field input[type=text], .field input[type=email], .field input[type=tel], .field input[type=url], .field input[type=number], .field input[type=month], .field textarea{
+  width:100%; border:1px solid var(--rule); background:var(--paper); padding:11px 12px; font-family:var(--font-body); font-size:14px; color:var(--ink); border-radius:var(--radius);
+}
+.field textarea{resize:vertical; min-height:90px; line-height:1.55;}
+.field input:focus, .field textarea:focus{border-color:var(--accent); outline:none; background:#fff;}
+
+.tag-input-wrap{border:1px solid var(--rule); padding:10px; background:var(--paper); border-radius:var(--radius);}
+.tag-input-wrap input{border:none; background:transparent; width:100%; font-size:14px; padding:4px; font-family:var(--font-body);}
+.tag-input-wrap input:focus{outline:none;}
+.chips{display:flex; flex-wrap:wrap; gap:7px; margin-bottom:6px;}
+.chip{
+  display:inline-flex; align-items:center; gap:7px; background:var(--paper-alt); border:1px solid var(--rule);
+  padding:6px 6px 6px 11px; font-size:13px; border-radius:20px;
+}
+.chip button{background:none; border:none; color:var(--ink-faint); font-size:14px; line-height:1; padding:0 4px;}
+.chip button:hover{color:var(--burgundy);}
+
+.entry-block{border:1px solid var(--rule); padding:22px; margin-bottom:16px; position:relative; background:var(--paper);}
+.entry-block .entry-num{position:absolute; top:-11px; left:18px; background:var(--paper-card); padding:0 8px; font-family:var(--font-mono); font-size:11px; color:var(--accent); border:1px solid var(--rule);}
+.entry-remove{position:absolute; top:14px; right:14px; background:none; border:none; font-family:var(--font-mono); font-size:11px; color:var(--ink-faint); text-transform:uppercase; letter-spacing:.05em;}
+.entry-remove:hover{color:var(--burgundy);}
+.checkbox-row{display:flex; align-items:center; gap:8px; margin-top:-6px; margin-bottom:18px;}
+.checkbox-row input{width:15px; height:15px;}
+.checkbox-row label{font-family:var(--font-mono); font-size:12px; color:var(--ink-soft); text-transform:none; letter-spacing:0;}
+
+.add-entry-btn{border:1px dashed var(--rule); background:none; width:100%; padding:13px; font-family:var(--font-mono); font-size:12px; text-transform:uppercase; letter-spacing:.06em; color:var(--ink-soft);}
+.add-entry-btn:hover{border-color:var(--accent); color:var(--accent);}
+
+.photo-upload{display:flex; align-items:center; gap:20px;}
+.photo-drop{
+  width:96px; height:96px; border-radius:50%; border:1.5px dashed var(--rule); background:var(--paper);
+  display:flex; align-items:center; justify-content:center; overflow:hidden; cursor:pointer; flex:none; position:relative;
+}
+.photo-drop:hover{border-color:var(--accent);}
+.photo-drop img{width:100%; height:100%; object-fit:cover;}
+.photo-drop .photo-placeholder{font-family:var(--font-mono); font-size:10px; color:var(--ink-faint); text-align:center; padding:0 8px; text-transform:uppercase; letter-spacing:.05em;}
+.photo-actions{display:flex; flex-direction:column; gap:8px;}
+.photo-actions .mono{font-size:11px; color:var(--ink-faint);}
+.photo-actions .link-btn{background:none; border:none; font-family:var(--font-mono); font-size:12px; color:var(--accent); text-decoration:underline; padding:0; text-align:left;}
+
+.mini-head{font-family:var(--font-mono); font-size:11px; text-transform:uppercase; letter-spacing:.08em; color:var(--ink-soft); margin:28px 0 12px;}
+.mini-head:first-child{margin-top:0;}
+
+.connect-card{border:1px solid var(--rule); padding:24px; margin-bottom:18px; background:var(--paper);}
+.connect-row{display:flex; gap:10px; align-items:center; margin:14px 0 6px; flex-wrap:wrap;}
+.connect-row input[type=text]{flex:1; min-width:180px; border:1px solid var(--rule); padding:11px 12px; border-radius:var(--radius); font-family:var(--font-body); font-size:14px; background:#fff;}
+.connect-row input[type=file]{font-family:var(--font-mono); font-size:12px; color:var(--ink-soft);}
+.connect-status{font-family:var(--font-mono); font-size:11.5px; color:var(--ink-faint); min-height:16px; margin-top:4px;}
+.connect-status.error{color:var(--burgundy);}
+.connect-status.success{color:var(--sage);}
+.repo-pick-list{display:flex; flex-direction:column; gap:8px; margin-top:14px; max-height:320px; overflow-y:auto;}
+.repo-pick-item{display:flex; align-items:flex-start; gap:10px; border:1px solid var(--rule); padding:10px 12px; background:#fff; cursor:pointer;}
+.repo-pick-item input{margin-top:3px; flex:none;}
+.repo-pick-item .repo-name{font-weight:600; font-size:13.5px;}
+.repo-pick-item .repo-desc{font-size:12.5px; color:var(--ink-soft); margin-top:2px;}
+.repo-pick-item .repo-meta{font-family:var(--font-mono); font-size:10.5px; color:var(--ink-faint); margin-top:4px;}
+.github-profile-card{display:flex; gap:14px; align-items:center; border:1px solid var(--rule); padding:14px; margin-top:14px; background:#fff;}
+.github-profile-card img{width:54px; height:54px; border-radius:50%; flex:none;}
+.github-profile-card .gh-name{font-weight:600; font-size:14px;}
+.github-profile-card .gh-bio{font-size:12.5px; color:var(--ink-soft);}
+.gh-quickfill{display:flex; gap:8px; flex-wrap:wrap; margin-top:10px;}
+
+.swatch-row{display:flex; gap:16px; margin-bottom:8px; flex-wrap:wrap;}
+.swatch{display:flex; flex-direction:column; align-items:center; gap:8px; cursor:pointer;}
+.swatch input{position:absolute; opacity:0; pointer-events:none;}
+.swatch .dot{width:38px; height:38px; border-radius:50%; border:2px solid transparent; transition:.15s;}
+.swatch[data-c=brass] .dot{background:var(--brass);}
+.swatch[data-c=slate] .dot{background:var(--slate);}
+.swatch[data-c=sage] .dot{background:var(--sage);}
+.swatch[data-c=burgundy] .dot{background:var(--burgundy);}
+.swatch span.label{font-family:var(--font-mono); font-size:10px; text-transform:uppercase; color:var(--ink-faint);}
+.swatch input:checked + .dot{border-color:var(--ink); box-shadow:0 0 0 3px var(--paper), 0 0 0 4px var(--ink);}
+
+.bg-grid{display:flex; gap:12px; flex-wrap:wrap; align-items:center;}
+.bg-swatch{width:34px; height:34px; border-radius:50%; border:2px solid var(--rule); padding:0; overflow:hidden; position:relative; background:#fff;}
+.bg-swatch.active{border-color:var(--ink); box-shadow:0 0 0 2px var(--paper-card), 0 0 0 3px var(--ink);}
+.bg-swatch-custom{display:inline-block; cursor:pointer;}
+.bg-swatch-custom input[type=color]{opacity:0; width:100%; height:100%; cursor:pointer; border:none; padding:0;}
+
+.style-grid{display:grid; grid-template-columns:repeat(3,1fr); gap:10px;}
+.style-card{
+  border:1px solid var(--rule); background:var(--paper); padding:12px; display:flex; flex-direction:column; align-items:flex-start; gap:9px;
+  text-align:left; border-radius:var(--radius);
+}
+.style-card:hover{border-color:var(--accent);}
+.style-card.active{border-color:var(--accent); background:var(--paper-card); box-shadow:0 0 0 1px var(--accent);}
+.style-icon{display:flex; gap:3px; width:48px; height:32px; border:1px solid var(--rule); padding:4px; background:#fff; flex-wrap:wrap; align-content:space-between;}
+.style-icon i{background:var(--ink-faint); display:block; font-style:normal; border-radius:1px;}
+.style-icon[data-layout="classic"]{flex-direction:column;}
+.style-icon[data-layout="classic"] i{width:100%; height:5px;}
+.style-icon[data-layout="sidebar"] i:nth-child(1){width:26%; height:100%;}
+.style-icon[data-layout="sidebar"] i:nth-child(2){width:68%; height:44%;}
+.style-icon[data-layout="sidebar"] i:nth-child(3){width:68%; height:44%;}
+.style-icon[data-layout="banner"] i:nth-child(1){width:100%; height:42%; background:var(--accent);}
+.style-icon[data-layout="banner"] i:nth-child(2){width:100%; height:20%;}
+.style-icon[data-layout="banner"] i:nth-child(3){width:100%; height:20%;}
+.style-icon[data-layout="boxed"]{flex-direction:column;}
+.style-icon[data-layout="boxed"] i{width:100%; height:26%; border:1px solid var(--ink-faint); background:transparent;}
+.style-icon[data-layout="minimal"]{flex-direction:column; justify-content:space-around;}
+.style-icon[data-layout="minimal"] i{width:55%; height:2px; margin:0 auto;}
+.style-name{font-family:var(--font-mono); font-size:11px; color:var(--ink-soft); letter-spacing:.02em;}
+.style-card.active .style-name{color:var(--ink); font-weight:600;}
+
+.step-nav{display:flex; justify-content:space-between; margin-top:34px; padding-top:24px; border-top:1px solid var(--rule);}
+.step-progress{font-family:var(--font-mono); font-size:11px; color:var(--ink-faint);}
+
+/* ============ RESULTS ============ */
+.results-top{max-width:1200px; margin:0 auto; padding:26px 32px 0; display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:16px;}
+.results-title-wrap{display:flex; align-items:center; gap:18px;}
+.stamp{
+  width:74px; height:74px; border:3px solid var(--sage); border-radius:50%; color:var(--sage);
+  display:flex; align-items:center; justify-content:center; text-align:center; transform:rotate(-9deg);
+  font-family:var(--font-mono); font-size:10px; letter-spacing:.06em; text-transform:uppercase; line-height:1.3; flex:none;
+}
+.results-title h2{font-size:28px;}
+.results-title p{font-family:var(--font-mono); font-size:12px; color:var(--ink-faint); margin-top:4px;}
+.result-tabs{display:flex; gap:0; border:1px solid var(--ink); border-radius:var(--radius); overflow:hidden;}
+.result-tab-btn{
+  font-family:var(--font-mono); font-size:12px; text-transform:uppercase; letter-spacing:.06em; padding:11px 20px;
+  background:transparent; border:none; color:var(--ink-soft); border-right:1px solid var(--ink);
+}
+.result-tab-btn:last-child{border-right:none;}
+.result-tab-btn.active{background:var(--ink); color:var(--paper);}
+
+.results-body{max-width:1200px; margin:0 auto; padding:32px 32px 90px; display:grid; grid-template-columns:1fr 260px; gap:34px; align-items:start;}
+.result-pane{display:none;}
+.result-pane.active{display:block;}
+.side-panel{border:1px solid var(--rule); background:var(--paper-card); padding:22px; position:sticky; top:26px;}
+.side-panel h4{font-size:14px; margin-bottom:10px;}
+.side-panel p{font-size:12.5px; color:var(--ink-soft); margin-bottom:16px;}
+
+/* ---- Resume paper (shared across all resume styles) ---- */
+.resume-outer{display:flex; justify-content:center;}
+.resume-paper{
+  background:#fff; width:100%; max-width:760px; padding:56px 60px; box-shadow:var(--shadow); border:1px solid var(--rule);
+  color:#20242b;
+}
+.resume-paper h1.r-name{font-size:32px; letter-spacing:-.01em; margin-bottom:4px;}
+.r-title{font-family:var(--font-mono); font-size:13px; text-transform:uppercase; letter-spacing:.08em; color:var(--accent); margin-bottom:14px;}
+.r-contact{font-size:12.5px; color:#5B6472; display:flex; flex-wrap:wrap; gap:4px 14px; margin-bottom:26px; padding-bottom:22px; border-bottom:2px solid var(--accent);}
+.r-contact a{color:#5B6472; text-decoration:none;}
+.r-header-wrap{margin-bottom:0;}
+.r-header{display:flex; align-items:flex-start; justify-content:space-between; gap:22px;}
+.r-header-text{flex:1;}
+.r-avatar{width:88px; height:88px; border-radius:50%; object-fit:cover; border:2px solid var(--accent); flex:none;}
+.r-section{margin-bottom:24px;}
+.r-section:last-child{margin-bottom:0;}
+.r-section h3{font-family:var(--font-mono); font-size:12px; letter-spacing:.12em; text-transform:uppercase; color:var(--accent); margin-bottom:12px; padding-bottom:6px; border-bottom:1px solid #E4E0D6;}
+.r-summary{font-size:13.5px; line-height:1.65; color:#333;}
+.r-skills{display:flex; flex-wrap:wrap; gap:7px 8px;}
+.r-skill-pill{font-size:11.5px; font-family:var(--font-mono); border:1px solid #DCD7CA; padding:4px 10px; color:#3f4652;}
+.r-entry{margin-bottom:16px;}
+.r-entry:last-child{margin-bottom:0;}
+.r-entry-head{display:flex; justify-content:space-between; align-items:baseline; gap:12px;}
+.r-entry-role{font-weight:600; font-size:14.5px;}
+.r-entry-org{font-size:13px; color:#5B6472;}
+.r-entry-date{font-family:var(--font-mono); font-size:11px; color:#8A93A0; white-space:nowrap;}
+.r-entry ul{margin:8px 0 0; padding-left:18px;}
+.r-entry li{font-size:13px; line-height:1.6; margin-bottom:3px; color:#333;}
+.r-proj-link{font-family:var(--font-mono); font-size:11px;}
+
+/* ---- Resume: type treatments ---- */
+.r-type-serif .r-name{font-family:var(--font-serif);}
+.r-type-serif .r-title{font-family:var(--font-serif); font-style:italic; text-transform:none; letter-spacing:0; font-weight:500; font-size:16px;}
+.r-type-serif .r-section h3{font-family:var(--font-serif); font-style:italic; text-transform:none; letter-spacing:.01em; font-weight:600; font-size:15px;}
+.r-type-modern .r-name{font-family:var(--font-geo); letter-spacing:-.02em; font-weight:700;}
+.r-type-modern .r-title{font-family:var(--font-geo); font-weight:500; letter-spacing:.02em; text-transform:none;}
+.r-type-modern .r-section h3{font-family:var(--font-geo); font-weight:600; letter-spacing:.08em;}
+
+/* ---- Resume: layouts ---- */
+.r-layout-banner .r-header-wrap{background:var(--accent); margin:-56px -60px 26px; padding:44px 60px 30px;}
+.r-layout-banner .r-header-wrap .r-name, .r-layout-banner .r-header-wrap .r-title{color:#fff;}
+.r-layout-banner .r-header-wrap .r-contact{color:rgba(255,255,255,.85); border-bottom-color:rgba(255,255,255,.4);}
+.r-layout-banner .r-header-wrap .r-contact a{color:rgba(255,255,255,.85);}
+.r-layout-banner .r-avatar{border-color:#fff;}
+
+.r-layout-boxed .r-section{border:1px solid var(--rule); padding:18px 20px; background:#fff;}
+.r-layout-boxed .r-section h3{border-bottom:none; margin-bottom:10px;}
+
+.r-layout-minimal .r-section h3{border-bottom:none; font-size:11px; letter-spacing:.18em;}
+.r-layout-minimal .r-contact{border-bottom:none;}
+.r-layout-minimal .r-section{margin-bottom:32px;}
+
+.r-layout-sidebar .r-grid{display:grid; grid-template-columns:190px 1fr; gap:0 34px;}
+.r-layout-sidebar .r-side{border-right:1px solid var(--rule); padding-right:22px;}
+.r-layout-sidebar .r-side .r-avatar{width:96px; height:96px; margin-bottom:16px;}
+.r-layout-sidebar .r-side .r-name{font-size:21px;}
+.r-layout-sidebar .r-side .r-contact{flex-direction:column; border-bottom:none; gap:6px; font-size:11.5px; margin-top:14px; padding-bottom:0;}
+.r-layout-sidebar .r-side .r-section h3{font-size:11px;}
+.r-layout-sidebar .r-main{min-width:0;}
+
+/* ---- Portfolio outer chrome (content styling lives in injected PORTFOLIO_CSS) ---- */
+.portfolio-outer{border:1px solid var(--rule); box-shadow:var(--shadow);}
+
+/* empty state */
+.empty-note{font-size:13px; color:var(--ink-faint); font-style:italic;}
+
+/* responsive */
+@media (max-width:860px){
+  .hero{grid-template-columns:1fr;}
+  .features{grid-template-columns:1fr;}
+  .field-grid{grid-template-columns:1fr;}
+  .survey-shell{grid-template-columns:1fr;}
+  .tabs{position:static; margin-bottom:20px;}
+  .tab-list{display:flex; flex-wrap:wrap; border-left:none; gap:4px;}
+  .tab-item{border-left:none; border-bottom:2px solid transparent; padding:8px 10px;}
+  .tab-item.current{border-bottom-color:var(--accent);}
+  .results-body{grid-template-columns:1fr;}
+  .side-panel{position:static;}
+  .resume-paper{padding:34px 26px;}
+  .r-layout-banner .r-header-wrap{margin:-34px -26px 22px; padding:28px 26px 20px;}
+  .r-layout-sidebar .r-grid{grid-template-columns:1fr;}
+  .r-layout-sidebar .r-side{border-right:none; border-bottom:1px solid var(--rule); padding-right:0; padding-bottom:20px; margin-bottom:20px;}
+  .style-grid{grid-template-columns:repeat(2,1fr);}
+}
+@media print{
+  body *{visibility:hidden;}
+  .resume-paper, .resume-paper *{visibility:visible;}
+  .resume-paper{position:absolute; top:0; left:0; box-shadow:none; border:none; width:100%;}
+}
+</style>
+</head>
+<body>
+
+<div id="app">
+
+<!-- ===================== LANDING ===================== -->
+<section id="screen-landing" class="screen active">
+  <div class="landing-wrap">
+    <header class="landing-header">
+      <div class="brand">DOS<span>SIER</span></div>
+      <div class="mono" style="font-size:11px; color:var(--ink-faint);">RESUME &amp; PORTFOLIO INTAKE</div>
+    </header>
+
+    <div class="hero">
+      <div>
+        <span class="eyebrow">Intake Form → Typeset Documents</span>
+        <h1>Your career,<br><em>drafted</em> properly.</h1>
+        <p class="hero-sub">Answer one structured intake and get back a typeset resume and a matching portfolio site — pick from 15 designs for each, your own colors, and a feed for your latest work.</p>
+        <div class="hero-cta">
+          <button class="btn btn-primary" onclick="goToScreen('survey')">Start the intake →</button>
+          <span class="hero-note">No account. No upload. Everything stays in this browser tab.</span>
+        </div>
+      </div>
+      <div class="hero-card">
+        <h3>J. Alvarez — Product Designer</h3>
+        <div class="fake-line w80"></div>
+        <div class="fake-line w60"></div>
+        <div class="fake-line w40"></div>
+        <div style="margin-top:12px;">
+          <span class="fake-skill">Figma</span><span class="fake-skill">Systems</span><span class="fake-skill">Research</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="features">
+      <div class="feature-card">
+        <span class="num mono">01</span>
+        <h4>One structured intake</h4>
+        <p>Nine short sections — identity, summary, skills, experience, education, projects, latest work, extras, design.</p>
+      </div>
+      <div class="feature-card">
+        <span class="num mono">02</span>
+        <h4>15 designs, either document</h4>
+        <p>Choose a layout and type treatment for your resume, and separately for your portfolio, plus its own background color.</p>
+      </div>
+      <div class="feature-card">
+        <span class="num mono">03</span>
+        <h4>A living portfolio</h4>
+        <p>Post your latest work so your portfolio's "Latest Work" feed stays current, then download it as a standalone site.</p>
+      </div>
+    </div>
+
+    <div class="landing-footer">
+      <span>FORM NO. RPB-01</span>
+      <span>ESTIMATED TIME — 7–11 MIN</span>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== SURVEY ===================== -->
+<section id="screen-survey" class="screen">
+  <div class="survey-top">
+    <div class="brand" style="font-size:16px;">DOS<span style="color:var(--accent);">SIER</span></div>
+    <button class="btn btn-ghost btn-sm" onclick="goToScreen('landing')">← Exit</button>
+  </div>
+
+  <div class="survey-shell">
+    <aside class="tabs">
+      <ul class="tab-list" id="tabList"></ul>
+    </aside>
+
+    <div>
+      <div class="survey-card">
+        <form id="surveyForm" onsubmit="return false;">
+
+          <!-- STEP 1 -->
+          <div class="step" data-step="1">
+            <div class="step-head">
+              <span class="eyebrow">Section 01</span>
+              <h2>Identity</h2>
+              <p class="step-help">The basics an employer sees first.</p>
+            </div>
+            <div class="field-grid">
+              <div class="field"><label>Full name <span class="req">*</span></label><input type="text" id="fullName" placeholder="Jordan Alvarez" required></div>
+              <div class="field"><label>Professional title <span class="req">*</span></label><input type="text" id="jobTitle" placeholder="Product Designer" required></div>
+              <div class="field"><label>Email <span class="req">*</span></label><input type="email" id="email" placeholder="jordan@email.com" required></div>
+              <div class="field"><label>Phone</label><input type="tel" id="phone" placeholder="+1 555 010 2938"></div>
+              <div class="field"><label>Location</label><input type="text" id="location" placeholder="Lagos, Nigeria"></div>
+              <div class="field"><label>LinkedIn URL</label><input type="url" id="linkedin" placeholder="linkedin.com/in/jordan"></div>
+              <div class="field full"><label>Website / GitHub URL</label><input type="url" id="website" placeholder="jordanalvarez.com"></div>
+              <div class="field full">
+                <label>Profile photo (optional)</label>
+                <div class="photo-upload">
+                  <div class="photo-drop" id="photoDrop" onclick="document.getElementById('photoInput').click()">
+                    <span class="photo-placeholder" id="photoPlaceholder">Add<br>photo</span>
+                    <img id="photoPreview" style="display:none;" alt="Profile photo preview">
+                  </div>
+                  <div class="photo-actions">
+                    <span class="mono">JPG or PNG. Square photos work best.</span>
+                    <button type="button" class="link-btn" id="removePhotoBtn" style="display:none;" onclick="removePhoto()">Remove photo</button>
+                  </div>
+                </div>
+                <input type="file" id="photoInput" accept="image/*" style="display:none;" onchange="handlePhotoUpload(event)">
+              </div>
+            </div>
+          </div>
+
+          <!-- STEP 2 -->
+          <div class="step" data-step="2">
+            <div class="step-head">
+              <span class="eyebrow">Section 02</span>
+              <h2>Connect accounts</h2>
+              <p class="step-help">Pull in real data automatically — optional, skip ahead if you'd rather fill things in by hand.</p>
+            </div>
+
+            <div class="connect-card">
+              <h4 class="mini-head" style="margin-top:0;">GitHub</h4>
+              <p class="step-help">GitHub has a public API, so this connects live: enter your username and we'll fetch your profile and repositories directly from github.com.</p>
+              <div class="connect-row">
+                <input type="text" id="githubUsername" placeholder="GitHub username">
+                <button type="button" class="btn btn-ghost btn-sm" onclick="fetchGithub()">Fetch</button>
+              </div>
+              <div class="connect-status" id="githubStatus"></div>
+              <div id="githubResult"></div>
+            </div>
+          </div>
+
+          <!-- STEP 3 -->
+          <div class="step" data-step="3">
+            <div class="step-head">
+              <span class="eyebrow">Section 03</span>
+              <h2>Summary</h2>
+              <p class="step-help">Two or three sentences on who you are professionally. Leave blank and a placeholder will be drafted for you to edit later.</p>
+            </div>
+            <div class="field full">
+              <label>Professional summary</label>
+              <textarea id="summary" placeholder="Product designer with 6 years shaping B2B tools, focused on turning ambiguous problems into systems teams can actually ship."></textarea>
+            </div>
+            <div class="field-grid">
+              <div class="field"><label>Years of experience</label><input type="number" min="0" id="yearsExp" placeholder="6"></div>
+              <div class="field"><label>Industry / field</label><input type="text" id="industry" placeholder="Product design, SaaS"></div>
+            </div>
+          </div>
+
+          <!-- STEP 4 -->
+          <div class="step" data-step="4">
+            <div class="step-head">
+              <span class="eyebrow">Section 04</span>
+              <h2>Skills</h2>
+              <p class="step-help">Type a skill and press Enter or comma to add it.</p>
+            </div>
+            <div class="field full">
+              <label>Technical / core skills</label>
+              <div class="tag-input-wrap">
+                <div class="chips" id="chipsTech"></div>
+                <input type="text" id="inputTech" placeholder="e.g. Figma, SQL, Project management">
+              </div>
+            </div>
+            <div class="field full">
+              <label>Strengths / soft skills</label>
+              <div class="tag-input-wrap">
+                <div class="chips" id="chipsSoft"></div>
+                <input type="text" id="inputSoft" placeholder="e.g. Stakeholder communication, Mentoring">
+              </div>
+            </div>
+          </div>
+
+          <!-- STEP 5 -->
+          <div class="step" data-step="5">
+            <div class="step-head">
+              <span class="eyebrow">Section 05</span>
+              <h2>Experience</h2>
+              <p class="step-help">Add each position, most recent first. One line per accomplishment reads best.</p>
+            </div>
+            <div id="expList"></div>
+            <button type="button" class="add-entry-btn" onclick="addExperienceEntry()">+ Add position</button>
+          </div>
+
+          <!-- STEP 6 -->
+          <div class="step" data-step="6">
+            <div class="step-head">
+              <span class="eyebrow">Section 06</span>
+              <h2>Education</h2>
+              <p class="step-help">Degrees, bootcamps, or relevant certifications with formal study.</p>
+            </div>
+            <div id="eduList"></div>
+            <button type="button" class="add-entry-btn" onclick="addEducationEntry()">+ Add education</button>
+          </div>
+
+          <!-- STEP 7 -->
+          <div class="step" data-step="7">
+            <div class="step-head">
+              <span class="eyebrow">Section 07</span>
+              <h2>Projects</h2>
+              <p class="step-help">These populate your portfolio site. Optional, but recommended.</p>
+            </div>
+            <div id="projList"></div>
+            <button type="button" class="add-entry-btn" onclick="addProjectEntry()">+ Add project</button>
+          </div>
+
+          <!-- STEP 8 -->
+          <div class="step" data-step="8">
+            <div class="step-head">
+              <span class="eyebrow">Section 08</span>
+              <h2>Latest work</h2>
+              <p class="step-help">Post a recent piece of work, launch, or update — this powers the "Latest Work" feed on your portfolio.</p>
+            </div>
+            <div id="latestList"></div>
+            <button type="button" class="add-entry-btn" onclick="addLatestEntry()">+ Add update</button>
+          </div>
+
+          <!-- STEP 9 -->
+          <div class="step" data-step="9">
+            <div class="step-head">
+              <span class="eyebrow">Section 09</span>
+              <h2>Extras</h2>
+              <p class="step-help">All optional — add what's relevant.</p>
+            </div>
+            <div class="field full">
+              <label>Certifications</label>
+              <div class="tag-input-wrap">
+                <div class="chips" id="chipsCert"></div>
+                <input type="text" id="inputCert" placeholder="e.g. AWS Certified Developer">
+              </div>
+            </div>
+            <div class="field full">
+              <label>Languages</label>
+              <div class="tag-input-wrap">
+                <div class="chips" id="chipsLang"></div>
+                <input type="text" id="inputLang" placeholder="e.g. English (native), Spanish (fluent)">
+              </div>
+            </div>
+          </div>
+
+          <!-- STEP 10 -->
+          <div class="step" data-step="10">
+            <div class="step-head">
+              <span class="eyebrow">Section 10</span>
+              <h2>Design</h2>
+              <p class="step-help">Pick colors and layouts for your documents, then generate.</p>
+            </div>
+
+            <h4 class="mini-head">Accent color</h4>
+            <div class="swatch-row">
+              <label class="swatch" data-c="brass"><input type="radio" name="accent" value="brass" checked><span class="dot"></span><span class="label">Brass</span></label>
+              <label class="swatch" data-c="slate"><input type="radio" name="accent" value="slate"><span class="dot"></span><span class="label">Slate</span></label>
+              <label class="swatch" data-c="sage"><input type="radio" name="accent" value="sage"><span class="dot"></span><span class="label">Sage</span></label>
+              <label class="swatch" data-c="burgundy"><input type="radio" name="accent" value="burgundy"><span class="dot"></span><span class="label">Burgundy</span></label>
+            </div>
+
+            <h4 class="mini-head">Resume design — pick one of 15</h4>
+            <div class="style-grid" id="resumeStyleGrid"></div>
+
+            <h4 class="mini-head">Portfolio design — pick one of 15</h4>
+            <div class="style-grid" id="portfolioStyleGrid"></div>
+
+            <h4 class="mini-head">Portfolio background color</h4>
+            <div class="bg-grid" id="bgGrid"></div>
+
+            <p class="step-help" style="margin-top:22px;">Ready when you are — your resume and portfolio will generate on the next screen, and you can come back and edit anytime.</p>
+          </div>
+
+        </form>
+
+        <div class="step-nav">
+          <button class="btn btn-ghost" id="backBtn" onclick="prevStep()">← Back</button>
+          <span class="step-progress" id="stepProgress">STEP 1 / 10</span>
+          <button class="btn btn-primary" id="nextBtn" onclick="nextStep()">Next →</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== RESULTS ===================== -->
+<section id="screen-results" class="screen">
+  <div class="results-top">
+    <div class="results-title-wrap">
+      <div class="stamp">READY<br>FOR USE</div>
+      <div class="results-title">
+        <h2>Your documents are ready</h2>
+        <p id="resultsSubtitle">PREPARED FOR —</p>
+      </div>
+    </div>
+    <div style="display:flex; flex-direction:column; align-items:flex-end; gap:12px;">
+      <div class="result-tabs">
+        <button class="result-tab-btn active" id="tabBtnResume" onclick="switchResultTab('resume')">Resume</button>
+        <button class="result-tab-btn" id="tabBtnPortfolio" onclick="switchResultTab('portfolio')">Portfolio</button>
+      </div>
+      <button class="btn btn-ghost btn-sm" onclick="goToScreen('survey', true)">← Edit answers</button>
+    </div>
+  </div>
+
+  <div class="results-body">
+    <div>
+      <div class="result-pane active" id="paneResume">
+        <div class="resume-outer"><div class="resume-paper" id="resumePaper"></div></div>
+      </div>
+      <div class="result-pane" id="panePortfolio">
+        <div class="portfolio-outer" id="portfolioPreview"></div>
+      </div>
+    </div>
+
+    <aside class="side-panel">
+      <div id="panelResume">
+        <h4>Resume</h4>
+        <p>A single-page, print-ready layout built from your intake. Download it as a PDF.</p>
+        <button class="btn btn-accent" style="width:100%;" onclick="downloadResumePDF()">Download PDF</button>
+      </div>
+      <div id="panelPortfolio" style="display:none;">
+        <h4>Portfolio</h4>
+        <p>A standalone HTML page you can host anywhere — drag it into Netlify, GitHub Pages, or your own server.</p>
+        <button class="btn btn-accent" style="width:100%;" onclick="downloadPortfolioHTML()">Download portfolio.html</button>
+      </div>
+    </aside>
+  </div>
+</section>
+
+</div>
+
+<script>
+/* ================= STATE ================= */
+let currentStep = 1;
+const TOTAL_STEPS = 10;
+const stepLabels = ['Identity','Connect','Summary','Skills','Experience','Education','Projects','Latest Work','Extras','Design'];
+
+let skillsTech = [], skillsSoft = [], certs = [], langs = [];
+let photoDataUrl = null;
+
+/* ================= STYLE SYSTEM ================= */
+const LAYOUTS = [
+  {id:'classic', name:'Classic'},
+  {id:'sidebar', name:'Sidebar'},
+  {id:'banner', name:'Banner'},
+  {id:'boxed', name:'Boxed'},
+  {id:'minimal', name:'Minimal'}
+];
+const TREATMENTS = [
+  {id:'mono', name:'Mono'},
+  {id:'serif', name:'Serif'},
+  {id:'modern', name:'Modern'}
+];
+function buildStyleList(){
+  const list = [];
+  LAYOUTS.forEach(l => TREATMENTS.forEach(t => list.push({
+    id: l.id + '-' + t.id, layout: l.id, type: t.id, layoutName: l.name, typeName: t.name
+  })));
+  return list;
+}
+const RESUME_STYLES = buildStyleList();
+const PORTFOLIO_STYLES = buildStyleList();
+let selectedResumeStyleId = 'classic-mono';
+let selectedPortfolioStyleId = 'classic-mono';
+
+const PORTFOLIO_BG_PRESETS = [
+  {id:'paper',   name:'Paper',      bg:'#F7F5F0', text:'#20242b', soft:'#5B6472', card:'#FFFFFF', line:'#ECE7DA'},
+  {id:'white',   name:'White',      bg:'#FFFFFF', text:'#20242b', soft:'#5B6472', card:'#F7F5F0', line:'#EDEDED'},
+  {id:'sand',    name:'Sand',       bg:'#EFE6D8', text:'#2B2620', soft:'#6B6152', card:'#FFFDF8', line:'#E0D3BC'},
+  {id:'sage',    name:'Sage',       bg:'#E7EDE4', text:'#26301F', soft:'#5B6B52', card:'#FFFFFF', line:'#D3DECB'},
+  {id:'blush',   name:'Blush',      bg:'#F5E9E6', text:'#33221E', soft:'#7A5F58', card:'#FFFFFF', line:'#EBD4CE'},
+  {id:'slateb',  name:'Slate Blue', bg:'#E7EDF2', text:'#1D2A33', soft:'#586B77', card:'#FFFFFF', line:'#D2DEE6'},
+  {id:'charcoal',name:'Charcoal',   bg:'#1B2430', text:'#F2F0EA', soft:'#A7B0BC', card:'#252E3B', line:'#33404F'},
+  {id:'ink',     name:'Ink Black',  bg:'#0F1115', text:'#EDEDED', soft:'#9AA0A8', card:'#191C22', line:'#2A2E36'}
+];
+let selectedPortfolioBgId = 'paper';
+let customBgColor = null;
+
+/* ================= NAVIGATION: SCREENS ================= */
+function goToScreen(name, keepStep){
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById('screen-' + name).classList.add('active');
+  if(name === 'survey'){
+    if(!keepStep){ currentStep = 1; }
+    renderTabs();
+    updateStepUI();
+    if(document.querySelectorAll('#expList .entry-block').length === 0) addExperienceEntry();
+    if(document.querySelectorAll('#eduList .entry-block').length === 0) addEducationEntry();
+    if(document.querySelectorAll('#projList .entry-block').length === 0) addProjectEntry();
+    if(document.querySelectorAll('#latestList .entry-block').length === 0) addLatestEntry();
+  }
+  window.scrollTo(0,0);
+}
+
+/* ================= TAB LIST ================= */
+function renderTabs(){
+  const list = document.getElementById('tabList');
+  list.innerHTML = stepLabels.map((label,i) => {
+    const n = i+1;
+    let cls = '';
+    if(n === currentStep) cls = 'current';
+    else if(n < currentStep) cls = 'done';
+    return '<li class="tab-item ' + cls + '"><span class="tnum mono">' + String(n).padStart(2,'0') + '</span>' + label + '</li>';
+  }).join('');
+}
+
+/* ================= STEP NAV ================= */
+function updateStepUI(){
+  document.querySelectorAll('.step').forEach(s => {
+    s.classList.toggle('active', Number(s.dataset.step) === currentStep);
+  });
+  document.getElementById('backBtn').disabled = currentStep === 1;
+  document.getElementById('nextBtn').textContent = currentStep === TOTAL_STEPS ? 'Generate my documents →' : 'Next →';
+  document.getElementById('stepProgress').textContent = 'STEP ' + currentStep + ' / ' + TOTAL_STEPS;
+  renderTabs();
+}
+
+function validateStep1(){
+  const required = ['fullName','jobTitle','email'];
+  for(const id of required){
+    const el = document.getElementById(id);
+    if(!el.value.trim()){
+      el.reportValidity ? el.reportValidity() : alert('Please complete the required fields.');
+      el.focus();
+      return false;
+    }
+  }
+  return true;
+}
+
+function nextStep(){
+  if(currentStep === 1 && !validateStep1()) return;
+  if(currentStep === TOTAL_STEPS){
+    generateDocuments();
+    return;
+  }
+  currentStep++;
+  updateStepUI();
+}
+function prevStep(){
+  if(currentStep === 1) return;
+  currentStep--;
+  updateStepUI();
+}
+
+/* ================= PHOTO UPLOAD ================= */
+function handlePhotoUpload(e){
+  const file = e.target.files[0];
+  if(!file) return;
+  if(!file.type.startsWith('image/')){ alert('Please choose an image file.'); return; }
+  if(file.size > 6 * 1024 * 1024){ alert('Please choose an image under 6MB.'); return; }
+  const reader = new FileReader();
+  reader.onload = function(ev){
+    photoDataUrl = ev.target.result;
+    const preview = document.getElementById('photoPreview');
+    preview.src = photoDataUrl;
+    preview.style.display = 'block';
+    document.getElementById('photoPlaceholder').style.display = 'none';
+    document.getElementById('removePhotoBtn').style.display = 'inline-block';
+  };
+  reader.readAsDataURL(file);
+}
+function removePhoto(){
+  photoDataUrl = null;
+  document.getElementById('photoInput').value = '';
+  document.getElementById('photoPreview').style.display = 'none';
+  document.getElementById('photoPreview').src = '';
+  document.getElementById('photoPlaceholder').style.display = 'block';
+  document.getElementById('removePhotoBtn').style.display = 'none';
+}
+
+/* ================= CONNECT: GITHUB ================= */
+let githubProfile = null;
+let githubRepos = [];
+
+function setGithubStatus(msg, isError, isSuccess){
+  const el = document.getElementById('githubStatus');
+  el.textContent = msg;
+  el.className = 'connect-status' + (isError ? ' error' : isSuccess ? ' success' : '');
+}
+
+async function fetchGithub(){
+  const username = document.getElementById('githubUsername').value.trim().replace(/^@/,'').replace(/^https?:\/\/(www\.)?github\.com\//i,'').replace(/\/$/,'');
+  if(!username){ setGithubStatus('Enter a username first.', true); return; }
+  setGithubStatus('Looking up ' + username + ' on GitHub…', false);
+  document.getElementById('githubResult').innerHTML = '';
+  try{
+    const profileRes = await fetch('https://api.github.com/users/' + encodeURIComponent(username));
+    if(profileRes.status === 404){ setGithubStatus('No GitHub user found with that username.', true); return; }
+    if(!profileRes.ok){ setGithubStatus('GitHub API error (status ' + profileRes.status + '). It may be rate-limited — try again shortly.', true); return; }
+    const profile = await profileRes.json();
+
+    const reposRes = await fetch('https://api.github.com/users/' + encodeURIComponent(username) + '/repos?sort=pushed&per_page=100');
+    const reposAll = reposRes.ok ? await reposRes.json() : [];
+    const repos = (Array.isArray(reposAll) ? reposAll : [])
+      .filter(r => !r.fork)
+      .sort((a,b) => (b.stargazers_count - a.stargazers_count) || (new Date(b.pushed_at) - new Date(a.pushed_at)))
+      .slice(0, 12);
+
+    githubProfile = profile;
+    githubRepos = repos;
+    renderGithubResult(profile, repos);
+    setGithubStatus('Found ' + (profile.name || profile.login) + ' — ' + repos.length + ' public repositories.', false, true);
+  } catch(err){
+    console.error(err);
+    setGithubStatus('Could not reach GitHub from here. Check your connection and try again.', true);
+  }
+}
+
+function renderGithubResult(profile, repos){
+  let html = '<div class="github-profile-card"><img src="' + profile.avatar_url + '" alt="">' +
+    '<div><div class="gh-name">' + escapeHtml(profile.name || profile.login) + '</div>' +
+    '<div class="gh-bio">' + escapeHtml(profile.bio || '') + '</div></div></div>';
+
+  html += '<div class="gh-quickfill">';
+  html += '<button type="button" class="btn btn-ghost btn-sm" onclick="useGithubPhoto()">Use as profile photo</button>';
+  if(profile.bio) html += '<button type="button" class="btn btn-ghost btn-sm" onclick="useGithubBio()">Use bio as summary</button>';
+  html += '<button type="button" class="btn btn-ghost btn-sm" onclick="useGithubWebsite()">Use as website link</button>';
+  html += '</div>';
+
+  if(repos.length){
+    html += '<div class="repo-pick-list">' + repos.map((r,i) =>
+      '<label class="repo-pick-item"><input type="checkbox" class="repo-check" data-idx="' + i + '" checked>' +
+      '<div><div class="repo-name">' + escapeHtml(r.name) + '</div>' +
+      (r.description ? '<div class="repo-desc">' + escapeHtml(r.description) + '</div>' : '') +
+      '<div class="repo-meta">' + (r.language ? escapeHtml(r.language) + ' · ' : '') + '★ ' + r.stargazers_count + '</div></div></label>'
+    ).join('') + '</div>';
+    html += '<button type="button" class="btn btn-accent btn-sm" style="margin-top:14px;" onclick="importSelectedRepos()">Import selected as projects</button>';
+  }
+  document.getElementById('githubResult').innerHTML = html;
+}
+
+function loadImageAsDataUrl(url){
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+    img.onload = () => {
+      try{
+        const canvas = document.createElement('canvas');
+        canvas.width = img.naturalWidth; canvas.height = img.naturalHeight;
+        canvas.getContext('2d').drawImage(img, 0, 0);
+        resolve(canvas.toDataURL('image/png'));
+      } catch(e){ reject(e); }
+    };
+    img.onerror = reject;
+    img.src = url;
+  });
+}
+
+function useGithubPhoto(){
+  if(!githubProfile) return;
+  loadImageAsDataUrl(githubProfile.avatar_url).then(dataUrl => {
+    photoDataUrl = dataUrl;
+    const preview = document.getElementById('photoPreview');
+    preview.src = dataUrl;
+    preview.style.display = 'block';
+    document.getElementById('photoPlaceholder').style.display = 'none';
+    document.getElementById('removePhotoBtn').style.display = 'inline-block';
+    setGithubStatus('Profile photo set from your GitHub avatar.', false, true);
+  }).catch(() => setGithubStatus('Could not load the avatar image directly — try saving it and uploading it in Section 01 instead.', true));
+}
+function useGithubBio(){
+  document.getElementById('summary').value = githubProfile.bio || '';
+  setGithubStatus('Summary field filled from your GitHub bio — review it in the Summary step.', false, true);
+}
+function useGithubWebsite(){
+  document.getElementById('website').value = githubProfile.html_url || ('https://github.com/' + githubProfile.login);
+  setGithubStatus('Website field set to your GitHub profile.', false, true);
+}
+function importSelectedRepos(){
+  const checks = document.querySelectorAll('.repo-check:checked');
+  let count = 0;
+  checks.forEach(c => {
+    const r = githubRepos[Number(c.dataset.idx)];
+    if(!r) return;
+    addProjectEntry({title: r.name, link: r.html_url, tech: r.language ? [r.language] : [], desc: r.description || ''});
+    count++;
+  });
+  setGithubStatus(count ? ('Imported ' + count + ' repositories into your Projects step.') : 'Select at least one repository first.', count === 0, count > 0);
+}
+
+/* ================= TAG INPUTS ================= */
+function wireTagInput(inputId, chipsId, arr){
+  const input = document.getElementById(inputId);
+  const chipsEl = document.getElementById(chipsId);
+  function render(){
+    chipsEl.innerHTML = arr.map((v,i) =>
+      '<span class="chip">' + escapeHtml(v) + '<button type="button" onclick="removeTag(\'' + chipsId + '\',' + i + ')">×</button></span>'
+    ).join('');
+  }
+  input.addEventListener('keydown', (e) => {
+    if(e.key === 'Enter' || e.key === ','){
+      e.preventDefault();
+      const val = input.value.trim().replace(/,$/,'');
+      if(val){ arr.push(val); input.value=''; render(); }
+    } else if(e.key === 'Backspace' && input.value === '' && arr.length){
+      arr.pop(); render();
+    }
+  });
+  chipsEl.__render = render;
+  render();
+}
+const tagStores = {};
+function removeTag(chipsId, idx){
+  tagStores[chipsId].splice(idx,1);
+  document.getElementById(chipsId).__render();
+}
+function initTagInputs(){
+  tagStores['chipsTech'] = skillsTech; wireTagInput('inputTech','chipsTech',skillsTech);
+  tagStores['chipsSoft'] = skillsSoft; wireTagInput('inputSoft','chipsSoft',skillsSoft);
+  tagStores['chipsCert'] = certs; wireTagInput('inputCert','chipsCert',certs);
+  tagStores['chipsLang'] = langs; wireTagInput('inputLang','chipsLang',langs);
+}
+
+/* ================= REPEATABLE ENTRIES ================= */
+function addExperienceEntry(data){
+  const wrap = document.getElementById('expList');
+  const div = document.createElement('div');
+  div.className = 'entry-block exp-entry';
+  const n = wrap.children.length + 1;
+  div.innerHTML =
+    '<span class="entry-num">POSITION ' + n + '</span>' +
+    '<button type="button" class="entry-remove" onclick="this.closest(\'.entry-block\').remove(); renumber(\'expList\',\'POSITION\')">Remove</button>' +
+    '<div class="field-grid">' +
+      '<div class="field"><label>Company</label><input type="text" class="exp-company" placeholder="Acme Corp"></div>' +
+      '<div class="field"><label>Role / title</label><input type="text" class="exp-role" placeholder="Senior Designer"></div>' +
+      '<div class="field"><label>Location</label><input type="text" class="exp-location" placeholder="Remote"></div>' +
+      '<div class="field"><label>Start date</label><input type="month" class="exp-start"></div>' +
+      '<div class="field"><label>End date</label><input type="month" class="exp-end"></div>' +
+    '</div>' +
+    '<div class="checkbox-row"><input type="checkbox" class="exp-current" id="expCurrent'+n+'" onchange="this.closest(\'.entry-block\').querySelector(\'.exp-end\').disabled=this.checked;"><label for="expCurrent'+n+'">I currently work here</label></div>' +
+    '<div class="field full"><label>What did you do? (one line per point)</label><textarea class="exp-desc" placeholder="Led redesign of the onboarding flow, cutting drop-off by 22%&#10;Mentored two junior designers"></textarea></div>';
+  wrap.appendChild(div);
+  if(data){
+    div.querySelector('.exp-company').value = data.company || '';
+    div.querySelector('.exp-role').value = data.role || '';
+    div.querySelector('.exp-location').value = data.location || '';
+    div.querySelector('.exp-start').value = data.start || '';
+    if(data.current){
+      div.querySelector('.exp-current').checked = true;
+      div.querySelector('.exp-end').disabled = true;
+    } else {
+      div.querySelector('.exp-end').value = data.end || '';
+    }
+    div.querySelector('.exp-desc').value = data.desc || '';
+  }
+}
+function addEducationEntry(data){
+  const wrap = document.getElementById('eduList');
+  const div = document.createElement('div');
+  div.className = 'entry-block edu-entry';
+  const n = wrap.children.length + 1;
+  div.innerHTML =
+    '<span class="entry-num">EDUCATION ' + n + '</span>' +
+    '<button type="button" class="entry-remove" onclick="this.closest(\'.entry-block\').remove(); renumber(\'eduList\',\'EDUCATION\')">Remove</button>' +
+    '<div class="field-grid">' +
+      '<div class="field"><label>School</label><input type="text" class="edu-school" placeholder="State University"></div>' +
+      '<div class="field"><label>Degree</label><input type="text" class="edu-degree" placeholder="B.A."></div>' +
+      '<div class="field"><label>Field of study</label><input type="text" class="edu-field" placeholder="Graphic Design"></div>' +
+      '<div class="field"><label>Start date</label><input type="month" class="edu-start"></div>' +
+      '<div class="field"><label>End date</label><input type="month" class="edu-end"></div>' +
+      '<div class="field"><label>Notes (honors, GPA)</label><input type="text" class="edu-notes" placeholder="Magna cum laude"></div>' +
+    '</div>';
+  wrap.appendChild(div);
+  if(data){
+    div.querySelector('.edu-school').value = data.school || '';
+    div.querySelector('.edu-degree').value = data.degree || '';
+    div.querySelector('.edu-field').value = data.field || '';
+    div.querySelector('.edu-start').value = data.start || '';
+    div.querySelector('.edu-end').value = data.end || '';
+    div.querySelector('.edu-notes').value = data.notes || '';
+  }
+}
+function addProjectEntry(data){
+  const wrap = document.getElementById('projList');
+  const div = document.createElement('div');
+  div.className = 'entry-block proj-entry';
+  const n = wrap.children.length + 1;
+  div.innerHTML =
+    '<span class="entry-num">PROJECT ' + n + '</span>' +
+    '<button type="button" class="entry-remove" onclick="this.closest(\'.entry-block\').remove(); renumber(\'projList\',\'PROJECT\')">Remove</button>' +
+    '<div class="field-grid">' +
+      '<div class="field full"><label>Project title</label><input type="text" class="proj-title" placeholder="Checkout Redesign"></div>' +
+      '<div class="field"><label>Link (optional)</label><input type="url" class="proj-link" placeholder="https://..."></div>' +
+      '<div class="field"><label>Tech / tools used</label><input type="text" class="proj-tech" placeholder="Figma, React"></div>' +
+    '</div>' +
+    '<div class="field full"><label>Description</label><textarea class="proj-desc" placeholder="What it is and the impact it had."></textarea></div>';
+  wrap.appendChild(div);
+  if(data){
+    div.querySelector('.proj-title').value = data.title || '';
+    div.querySelector('.proj-link').value = data.link || '';
+    div.querySelector('.proj-tech').value = (data.tech || []).join(', ');
+    div.querySelector('.proj-desc').value = data.desc || '';
+  }
+}
+function addLatestEntry(){
+  const wrap = document.getElementById('latestList');
+  const div = document.createElement('div');
+  div.className = 'entry-block latest-entry';
+  const n = wrap.children.length + 1;
+  div.innerHTML =
+    '<span class="entry-num">UPDATE ' + n + '</span>' +
+    '<button type="button" class="entry-remove" onclick="this.closest(\'.entry-block\').remove(); renumber(\'latestList\',\'UPDATE\')">Remove</button>' +
+    '<div class="field-grid">' +
+      '<div class="field full"><label>Title</label><input type="text" class="latest-title" placeholder="Launched the new onboarding flow"></div>' +
+      '<div class="field"><label>Date</label><input type="month" class="latest-date"></div>' +
+      '<div class="field"><label>Link (optional)</label><input type="url" class="latest-link" placeholder="https://..."></div>' +
+    '</div>' +
+    '<div class="field full"><label>Short description</label><textarea class="latest-desc" placeholder="What it was and why it mattered."></textarea></div>';
+  wrap.appendChild(div);
+}
+function renumber(listId, label){
+  document.querySelectorAll('#' + listId + ' .entry-num').forEach((el,i) => {
+    el.textContent = label + ' ' + (i+1);
+  });
+}
+
+/* ================= STYLE / BACKGROUND PICKERS ================= */
+function renderStyleGrid(containerId, styles, selectedId, selectFnName){
+  document.getElementById(containerId).innerHTML = styles.map(st =>
+    '<button type="button" class="style-card' + (st.id === selectedId ? ' active' : '') + '" onclick="' + selectFnName + '(\'' + st.id + '\')">' +
+      '<span class="style-icon" data-layout="' + st.layout + '"><i></i><i></i><i></i></span>' +
+      '<span class="style-name">' + st.layoutName + ' · ' + st.typeName + '</span>' +
+    '</button>'
+  ).join('');
+}
+function selectResumeStyle(id){
+  selectedResumeStyleId = id;
+  renderStyleGrid('resumeStyleGrid', RESUME_STYLES, selectedResumeStyleId, 'selectResumeStyle');
+}
+function selectPortfolioStyle(id){
+  selectedPortfolioStyleId = id;
+  renderStyleGrid('portfolioStyleGrid', PORTFOLIO_STYLES, selectedPortfolioStyleId, 'selectPortfolioStyle');
+}
+function renderBgGrid(){
+  const wrap = document.getElementById('bgGrid');
+  let html = PORTFOLIO_BG_PRESETS.map(b =>
+    '<button type="button" class="bg-swatch' + (selectedPortfolioBgId === b.id ? ' active' : '') + '" style="background:' + b.bg + ';" onclick="selectPortfolioBg(\'' + b.id + '\')" title="' + b.name + '"></button>'
+  ).join('');
+  html += '<label class="bg-swatch bg-swatch-custom' + (selectedPortfolioBgId === 'custom' ? ' active' : '') + '" style="background:' + (customBgColor || 'linear-gradient(135deg,#eee,#ccc)') + ';" title="Custom color">' +
+    '<input type="color" id="customBgInput" value="' + (customBgColor || '#888888') + '" onchange="handleCustomBg(event)">' +
+  '</label>';
+  wrap.innerHTML = html;
+}
+function selectPortfolioBg(id){
+  selectedPortfolioBgId = id;
+  renderBgGrid();
+}
+function handleCustomBg(e){
+  customBgColor = e.target.value;
+  selectedPortfolioBgId = 'custom';
+  renderBgGrid();
+}
+
+/* ---- color helpers for custom background ---- */
+function hexToRgb(hex){
+  hex = hex.replace('#','');
+  if(hex.length === 3) hex = hex.split('').map(c=>c+c).join('');
+  const num = parseInt(hex,16);
+  return {r:(num>>16)&255, g:(num>>8)&255, b:num&255};
+}
+function rgbToHex(r,g,b){
+  return '#' + [r,g,b].map(v => Math.round(Math.max(0,Math.min(255,v))).toString(16).padStart(2,'0')).join('');
+}
+function mixHex(hex, targetHex, amount){
+  const a = hexToRgb(hex), b = hexToRgb(targetHex);
+  return rgbToHex(a.r+(b.r-a.r)*amount, a.g+(b.g-a.g)*amount, a.b+(b.b-a.b)*amount);
+}
+function relLuminance(hex){
+  const {r,g,b} = hexToRgb(hex);
+  return (0.299*r + 0.587*g + 0.114*b) / 255;
+}
+function getCustomBgColors(hex){
+  const isDark = relLuminance(hex) < 0.5;
+  const text = isDark ? '#F2F0EA' : '#20242b';
+  const soft = isDark ? mixHex(hex,'#ffffff',0.55) : mixHex(hex,'#000000',0.45);
+  const card = isDark ? mixHex(hex,'#ffffff',0.10) : '#FFFFFF';
+  const line = isDark ? mixHex(hex,'#ffffff',0.20) : mixHex(hex,'#000000',0.12);
+  return {bg:hex, text, soft, card, line};
+}
+function getPortfolioBgColors(){
+  if(selectedPortfolioBgId === 'custom' && customBgColor) return getCustomBgColors(customBgColor);
+  return PORTFOLIO_BG_PRESETS.find(b => b.id === selectedPortfolioBgId) || PORTFOLIO_BG_PRESETS[0];
+}
+
+/* ================= COLLECT ================= */
+function val(id){ return document.getElementById(id).value.trim(); }
+
+function collectState(){
+  const experience = Array.from(document.querySelectorAll('#expList .exp-entry')).map(el => {
+    const desc = el.querySelector('.exp-desc').value.split('\n').map(s=>s.trim()).filter(Boolean);
+    return {
+      company: el.querySelector('.exp-company').value.trim(),
+      role: el.querySelector('.exp-role').value.trim(),
+      location: el.querySelector('.exp-location').value.trim(),
+      start: el.querySelector('.exp-start').value,
+      end: el.querySelector('.exp-current').checked ? 'Present' : el.querySelector('.exp-end').value,
+      bullets: desc
+    };
+  }).filter(e => e.company || e.role);
+
+  const education = Array.from(document.querySelectorAll('#eduList .edu-entry')).map(el => ({
+    school: el.querySelector('.edu-school').value.trim(),
+    degree: el.querySelector('.edu-degree').value.trim(),
+    field: el.querySelector('.edu-field').value.trim(),
+    start: el.querySelector('.edu-start').value,
+    end: el.querySelector('.edu-end').value,
+    notes: el.querySelector('.edu-notes').value.trim()
+  })).filter(e => e.school);
+
+  const projects = Array.from(document.querySelectorAll('#projList .proj-entry')).map(el => ({
+    title: el.querySelector('.proj-title').value.trim(),
+    link: el.querySelector('.proj-link').value.trim(),
+    tech: el.querySelector('.proj-tech').value.split(',').map(s=>s.trim()).filter(Boolean),
+    desc: el.querySelector('.proj-desc').value.trim()
+  })).filter(p => p.title);
+
+  const latestWork = Array.from(document.querySelectorAll('#latestList .latest-entry')).map(el => ({
+    title: el.querySelector('.latest-title').value.trim(),
+    date: el.querySelector('.latest-date').value,
+    link: el.querySelector('.latest-link').value.trim(),
+    desc: el.querySelector('.latest-desc').value.trim()
+  })).filter(w => w.title);
+
+  const accent = document.querySelector('input[name=accent]:checked').value;
+  const resumeStyle = RESUME_STYLES.find(s => s.id === selectedResumeStyleId) || RESUME_STYLES[0];
+  const portfolioStyle = PORTFOLIO_STYLES.find(s => s.id === selectedPortfolioStyleId) || PORTFOLIO_STYLES[0];
+  const portfolioBg = getPortfolioBgColors();
+
+  return {
+    personal: {
+      fullName: val('fullName'), title: val('jobTitle'), email: val('email'),
+      phone: val('phone'), location: val('location'), linkedin: val('linkedin'), website: val('website'),
+      photo: photoDataUrl
+    },
+    summary: val('summary'), yearsExp: val('yearsExp'), industry: val('industry'),
+    skillsTech: [...skillsTech], skillsSoft: [...skillsSoft],
+    experience, education, projects, latestWork, certs: [...certs], langs: [...langs],
+    accent, resumeStyle, portfolioStyle, portfolioBg
+  };
+}
+
+/* ================= HELPERS ================= */
+function escapeHtml(str){
+  return String(str).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+}
+function fmtDate(d){
+  if(!d) return '';
+  if(d === 'Present') return 'Present';
+  const parts = d.split('-');
+  if(parts.length < 2) return d;
+  const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  return months[Number(parts[1])-1] + ' ' + parts[0];
+}
+function dateRange(start,end){
+  const s = fmtDate(start), e = fmtDate(end);
+  if(s && e) return s + ' — ' + e;
+  return s || e || '';
+}
+
+/* ================= GENERATE ================= */
+let lastState = null;
+
+function generateDocuments(){
+  const state = collectState();
+  lastState = state;
+
+  const resumeResult = renderResume(state);
+  const resumeEl = document.getElementById('resumePaper');
+  resumeEl.className = 'resume-paper r-layout-' + state.resumeStyle.layout + ' r-type-' + state.resumeStyle.type;
+  resumeEl.dataset.accent = state.accent;
+  resumeEl.innerHTML = resumeResult;
+
+  const portfolioResult = renderPortfolio(state);
+  const portfolioEl = document.getElementById('portfolioPreview');
+  portfolioEl.className = 'portfolio-outer portfolio-doc p-layout-' + state.portfolioStyle.layout + ' p-type-' + state.portfolioStyle.type;
+  portfolioEl.dataset.accent = state.accent;
+  portfolioEl.style.setProperty('--p-bg', state.portfolioBg.bg);
+  portfolioEl.style.setProperty('--p-text', state.portfolioBg.text);
+  portfolioEl.style.setProperty('--p-soft', state.portfolioBg.soft);
+  portfolioEl.style.setProperty('--p-card', state.portfolioBg.card);
+  portfolioEl.style.setProperty('--p-line', state.portfolioBg.line);
+  portfolioEl.innerHTML = portfolioResult.html;
+
+  document.getElementById('resultsSubtitle').textContent = 'PREPARED FOR — ' + (state.personal.fullName || 'YOU').toUpperCase();
+  goToScreen('results');
+}
+
+function switchResultTab(which){
+  document.getElementById('paneResume').classList.toggle('active', which==='resume');
+  document.getElementById('panePortfolio').classList.toggle('active', which==='portfolio');
+  document.getElementById('tabBtnResume').classList.toggle('active', which==='resume');
+  document.getElementById('tabBtnPortfolio').classList.toggle('active', which==='portfolio');
+  document.getElementById('panelResume').style.display = which==='resume' ? 'block':'none';
+  document.getElementById('panelPortfolio').style.display = which==='portfolio' ? 'block':'none';
+}
+
+/* ================= RESUME: SECTION BUILDERS ================= */
+function buildSummarySection(s){
+  const p = s.personal;
+  const summaryText = s.summary || ('Motivated ' + (p.title || 'professional') + (s.industry ? ' in ' + s.industry : '') + (s.yearsExp ? ' with ' + s.yearsExp + ' years of experience' : '') + '. Add a sentence or two about your focus and strengths.');
+  return '<div class="r-section"><h3>Summary</h3><p class="r-summary">' + escapeHtml(summaryText) + '</p></div>';
+}
+function buildSkillsSection(s){
+  if(!s.skillsTech.length && !s.skillsSoft.length) return '';
+  const all = [...s.skillsTech, ...s.skillsSoft];
+  return '<div class="r-section"><h3>Skills</h3><div class="r-skills">' + all.map(sk=>'<span class="r-skill-pill">'+escapeHtml(sk)+'</span>').join('') + '</div></div>';
+}
+function buildExperienceSection(s){
+  if(!s.experience.length) return '';
+  let html = '<div class="r-section"><h3>Experience</h3>';
+  s.experience.forEach(e => {
+    html += '<div class="r-entry"><div class="r-entry-head"><div><span class="r-entry-role">' + escapeHtml(e.role||'Role') + '</span> — <span class="r-entry-org">' + escapeHtml(e.company||'Company') + (e.location ? ', ' + escapeHtml(e.location) : '') + '</span></div><span class="r-entry-date">' + dateRange(e.start,e.end) + '</span></div>';
+    if(e.bullets.length) html += '<ul>' + e.bullets.map(b=>'<li>'+escapeHtml(b)+'</li>').join('') + '</ul>';
+    html += '</div>';
+  });
+  return html + '</div>';
+}
+function buildEducationSection(s){
+  if(!s.education.length) return '';
+  let html = '<div class="r-section"><h3>Education</h3>';
+  s.education.forEach(e => {
+    html += '<div class="r-entry"><div class="r-entry-head"><div><span class="r-entry-role">' + escapeHtml(e.degree || 'Degree') + (e.field ? ', ' + escapeHtml(e.field) : '') + '</span> — <span class="r-entry-org">' + escapeHtml(e.school) + '</span></div><span class="r-entry-date">' + dateRange(e.start,e.end) + '</span></div>';
+    if(e.notes) html += '<div style="font-size:12.5px; color:#5B6472; margin-top:4px;">' + escapeHtml(e.notes) + '</div>';
+    html += '</div>';
+  });
+  return html + '</div>';
+}
+function buildProjectsSection(s){
+  if(!s.projects.length) return '';
+  let html = '<div class="r-section"><h3>Projects</h3>';
+  s.projects.forEach(pr => {
+    html += '<div class="r-entry"><div class="r-entry-head"><span class="r-entry-role">' + escapeHtml(pr.title) + '</span>' + (pr.link ? '<span class="r-proj-link">' + escapeHtml(pr.link) + '</span>' : '') + '</div>';
+    if(pr.desc) html += '<div style="font-size:13px; color:#333; margin-top:4px;">' + escapeHtml(pr.desc) + '</div>';
+    if(pr.tech.length) html += '<div class="r-skills" style="margin-top:8px;">' + pr.tech.map(t=>'<span class="r-skill-pill">'+escapeHtml(t)+'</span>').join('') + '</div>';
+    html += '</div>';
+  });
+  return html + '</div>';
+}
+function buildResumeLatestSection(s){
+  if(!s.latestWork.length) return '';
+  let html = '<div class="r-section"><h3>Recent Work</h3>';
+  s.latestWork.forEach(w => {
+    html += '<div class="r-entry"><div class="r-entry-head"><span class="r-entry-role">' + escapeHtml(w.title) + '</span><span class="r-entry-date">' + fmtDate(w.date) + '</span></div>';
+    if(w.desc) html += '<div style="font-size:13px; color:#333; margin-top:4px;">' + escapeHtml(w.desc) + '</div>';
+    if(w.link) html += '<div class="r-proj-link" style="margin-top:4px;">' + escapeHtml(w.link) + '</div>';
+    html += '</div>';
+  });
+  return html + '</div>';
+}
+function buildExtrasSection(s){
+  if(!s.certs.length && !s.langs.length) return '';
+  let html = '<div class="r-section"><h3>Additional</h3>';
+  if(s.certs.length) html += '<p class="r-summary" style="margin-bottom:6px;"><strong>Certifications:</strong> ' + s.certs.map(escapeHtml).join(', ') + '</p>';
+  if(s.langs.length) html += '<p class="r-summary"><strong>Languages:</strong> ' + s.langs.map(escapeHtml).join(', ') + '</p>';
+  return html + '</div>';
+}
+
+/* ================= RENDER: RESUME ================= */
+function renderResume(s){
+  const p = s.personal;
+  const avatarHtml = p.photo ? '<img class="r-avatar" src="' + p.photo + '" alt="">' : '';
+  const nameTitleHtml = '<h1 class="r-name">' + escapeHtml(p.fullName || 'Your Name') + '</h1><div class="r-title">' + escapeHtml(p.title || 'Professional Title') + '</div>';
+
+  const contactBits = [];
+  if(p.email) contactBits.push(escapeHtml(p.email));
+  if(p.phone) contactBits.push(escapeHtml(p.phone));
+  if(p.location) contactBits.push(escapeHtml(p.location));
+  if(p.linkedin) contactBits.push(escapeHtml(p.linkedin));
+  if(p.website) contactBits.push(escapeHtml(p.website));
+  const contactHtml = '<div class="r-contact">' + contactBits.map(b=>'<span>'+b+'</span>').join('') + '</div>';
+
+  const summaryHtml = buildSummarySection(s);
+  const skillsHtml = buildSkillsSection(s);
+  const experienceHtml = buildExperienceSection(s);
+  const educationHtml = buildEducationSection(s);
+  const projectsHtml = buildProjectsSection(s);
+  const latestHtml = buildResumeLatestSection(s);
+  const extrasHtml = buildExtrasSection(s);
+
+  if(s.resumeStyle.layout === 'sidebar'){
+    const sideHtml = avatarHtml + nameTitleHtml + contactHtml + skillsHtml + extrasHtml;
+    const mainHtml = summaryHtml + experienceHtml + educationHtml + projectsHtml + latestHtml;
+    return '<div class="r-grid"><div class="r-side">' + sideHtml + '</div><div class="r-main">' + mainHtml + '</div></div>';
+  }
+
+  const headerInner = avatarHtml
+    ? '<div class="r-header"><div class="r-header-text">' + nameTitleHtml + '</div>' + avatarHtml + '</div>'
+    : nameTitleHtml;
+  const headerWrap = '<div class="r-header-wrap">' + headerInner + contactHtml + '</div>';
+
+  return headerWrap + summaryHtml + skillsHtml + experienceHtml + educationHtml + projectsHtml + latestHtml + extrasHtml;
+}
+
+/* ================= PORTFOLIO: SECTION BUILDERS ================= */
+function buildPortfolioLatest(s){
+  if(!s.latestWork.length) return '';
+  let html = '<div class="p-block p-latest"><h2>Latest Work</h2>';
+  s.latestWork.forEach(w => {
+    html += '<div class="p-latest-item"><div class="p-latest-date mono">' + fmtDate(w.date) + '</div><div class="p-latest-body"><h3>' + escapeHtml(w.title) + '</h3>';
+    if(w.desc) html += '<p>' + escapeHtml(w.desc) + '</p>';
+    if(w.link) html += '<a href="' + escapeHtml(w.link) + '" target="_blank" rel="noopener">View →</a>';
+    html += '</div></div>';
+  });
+  return html + '</div>';
+}
+function buildPortfolioProjects(s){
+  if(!s.projects.length) return '';
+  let html = '<div class="p-block"><h2>Selected Work</h2><div class="p-projects">';
+  s.projects.forEach(pr => {
+    html += '<div class="p-project-card"><h3>' + escapeHtml(pr.title) + '</h3>';
+    if(pr.desc) html += '<p>' + escapeHtml(pr.desc) + '</p>';
+    if(pr.tech.length) html += '<div class="p-tech">' + pr.tech.map(t=>'<span>'+escapeHtml(t)+'</span>').join('') + '</div>';
+    if(pr.link) html += '<a href="' + escapeHtml(pr.link) + '" target="_blank" rel="noopener">View project →</a>';
+    html += '</div>';
+  });
+  return html + '</div></div>';
+}
+function buildPortfolioExperience(s){
+  if(!s.experience.length) return '';
+  let html = '<div class="p-block"><h2>Experience</h2>';
+  s.experience.forEach(e => {
+    html += '<div class="p-timeline-item"><div class="p-timeline-date">' + dateRange(e.start,e.end) + '</div><div class="p-timeline-body"><h4>' + escapeHtml(e.role||'Role') + '</h4><div class="org">' + escapeHtml(e.company||'') + (e.location ? ', ' + escapeHtml(e.location) : '') + '</div>';
+    if(e.bullets.length) html += '<ul>' + e.bullets.map(b=>'<li>'+escapeHtml(b)+'</li>').join('') + '</ul>';
+    html += '</div></div>';
+  });
+  return html + '</div>';
+}
+function buildPortfolioSkills(s){
+  if(!s.skillsTech.length && !s.skillsSoft.length) return '';
+  return '<div class="p-block"><h2>Skills</h2><div class="p-skills-wrap">' + [...s.skillsTech,...s.skillsSoft].map(sk=>'<span class="r-skill-pill">'+escapeHtml(sk)+'</span>').join('') + '</div></div>';
+}
+function buildPortfolioEducation(s){
+  if(!s.education.length) return '';
+  let html = '<div class="p-block"><h2>Education</h2>';
+  s.education.forEach(e => {
+    html += '<div class="p-timeline-item"><div class="p-timeline-date">' + dateRange(e.start,e.end) + '</div><div class="p-timeline-body"><h4>' + escapeHtml(e.degree||'') + (e.field ? ', ' + escapeHtml(e.field) : '') + '</h4><div class="org">' + escapeHtml(e.school) + '</div></div></div>';
+  });
+  return html + '</div>';
+}
+
+/* ================= RENDER: PORTFOLIO ================= */
+function renderPortfolio(s){
+  const p = s.personal;
+  const avatarHtml = p.photo ? '<img class="p-avatar" src="' + p.photo + '" alt="">' : '';
+
+  let heroText = '<span class="eyebrow">' + escapeHtml(p.title || 'Portfolio') + '</span>';
+  heroText += '<h1>' + escapeHtml(p.fullName || 'Your Name') + '</h1>';
+  heroText += '<p class="p-summary">' + escapeHtml(s.summary || 'A short introduction goes here — what you work on and what you care about.') + '</p>';
+  const links = [];
+  if(p.email) links.push('<a href="mailto:'+escapeHtml(p.email)+'">'+escapeHtml(p.email)+'</a>');
+  if(p.linkedin) links.push('<a href="https://'+escapeHtml(p.linkedin.replace(/^https?:\/\//,''))+'" target="_blank" rel="noopener">LinkedIn</a>');
+  if(p.website) links.push('<a href="https://'+escapeHtml(p.website.replace(/^https?:\/\//,''))+'" target="_blank" rel="noopener">Website</a>');
+  if(links.length) heroText += '<div class="p-links">' + links.join('') + '</div>';
+
+  const latestHtml = buildPortfolioLatest(s);
+  const projectsHtml = buildPortfolioProjects(s);
+  const experienceHtml = buildPortfolioExperience(s);
+  const skillsHtml = buildPortfolioSkills(s);
+  const educationHtml = buildPortfolioEducation(s);
+  const footerHtml = '<div class="p-footer"><span>' + escapeHtml(p.fullName || '') + '</span><span>' + (p.email ? escapeHtml(p.email) : '') + '</span></div>';
+
+  const layout = s.portfolioStyle.layout;
+  const layoutClass = 'p-layout-' + layout;
+  const typeClass = 'p-type-' + s.portfolioStyle.type;
+
+  let bodyHtml;
+  if(layout === 'sidebar'){
+    const sideHtml = '<div class="p-side">' + avatarHtml +
+      '<h1 class="p-side-name">' + escapeHtml(p.fullName || 'Your Name') + '</h1>' +
+      '<div class="p-side-title">' + escapeHtml(p.title || '') + '</div>' +
+      '<p class="p-side-summary">' + escapeHtml(s.summary || '') + '</p>' +
+      (links.length ? '<div class="p-links p-side-links">' + links.join('') + '</div>' : '') +
+      skillsHtml + '</div>';
+    const mainHtml = latestHtml + projectsHtml + experienceHtml + educationHtml + footerHtml;
+    bodyHtml = '<div class="p-grid"><div class="p-side-wrap">' + sideHtml + '</div><div class="p-main-wrap">' + mainHtml + '</div></div>';
+  } else {
+    const heroHtml = '<div class="p-hero">' + (avatarHtml ? '<div class="p-hero-flex"><div class="p-hero-text">' + heroText + '</div>' + avatarHtml + '</div>' : heroText) + '</div>';
+    bodyHtml = heroHtml + latestHtml + projectsHtml + experienceHtml + skillsHtml + educationHtml + footerHtml;
+  }
+
+  return {html: bodyHtml, layoutClass, typeClass};
+}
+
+/* ================= PORTFOLIO CSS (shared: live preview + standalone download) ================= */
+const PORTFOLIO_CSS =
+".portfolio-doc{background:var(--p-bg,#F7F5F0); color:var(--p-text,#20242b); font-family:'IBM Plex Sans',sans-serif; line-height:1.5;}" +
+".portfolio-doc .eyebrow{font-family:'IBM Plex Mono',monospace; font-size:11px; letter-spacing:.14em; text-transform:uppercase; color:var(--accent); display:inline-flex; align-items:center; gap:8px; margin-bottom:14px;}" +
+".portfolio-doc .eyebrow::before{content:'';width:18px;height:1px;background:var(--accent);display:inline-block;}" +
+".portfolio-doc .p-hero{padding:70px 56px; border-bottom:1px solid var(--p-line,#ECE7DA);}" +
+".portfolio-doc .p-hero h1{font-size:44px; line-height:1.06; margin-bottom:14px; font-family:'Fraunces',serif; font-weight:600; color:var(--p-text,#20242b);}" +
+".portfolio-doc .p-summary{font-size:15.5px; color:var(--p-soft,#5B6472); max-width:60ch; margin-bottom:20px;}" +
+".portfolio-doc .p-links{display:flex; gap:16px; font-family:'IBM Plex Mono',monospace; font-size:12px; flex-wrap:wrap;}" +
+".portfolio-doc .p-links a{color:var(--p-text,#20242b); border-bottom:1px solid var(--accent); text-decoration:none;}" +
+".portfolio-doc .p-hero-flex{display:flex; align-items:center; gap:36px;}" +
+".portfolio-doc .p-hero-text{flex:1;}" +
+".portfolio-doc .p-avatar{width:130px;height:130px;border-radius:50%;object-fit:cover;border:3px solid var(--accent); flex:none;}" +
+".portfolio-doc .p-block{padding:50px 56px; border-bottom:1px solid var(--p-line,#ECE7DA);}" +
+".portfolio-doc .p-block:last-child{border-bottom:none;}" +
+".portfolio-doc .p-block h2{font-family:'IBM Plex Mono',monospace; font-size:12px; letter-spacing:.14em; text-transform:uppercase; color:var(--accent); margin-bottom:26px; font-weight:500;}" +
+".portfolio-doc .p-projects{display:grid; grid-template-columns:repeat(auto-fill,minmax(230px,1fr)); gap:20px;}" +
+".portfolio-doc .p-project-card{border:1px solid var(--p-line,#ECE7DA); background:var(--p-card,#fff); padding:20px;}" +
+".portfolio-doc .p-project-card h3{font-size:16px; margin-bottom:8px; font-family:'Fraunces',serif; color:var(--p-text,#20242b);}" +
+".portfolio-doc .p-project-card p{font-size:13px; color:var(--p-soft,#5B6472); margin-bottom:10px;}" +
+".portfolio-doc .p-project-card a{font-family:'IBM Plex Mono',monospace; font-size:11px; color:var(--accent); text-decoration:none;}" +
+".portfolio-doc .p-tech{display:flex; flex-wrap:wrap; gap:5px; margin-bottom:10px;}" +
+".portfolio-doc .p-tech span{font-family:'IBM Plex Mono',monospace; font-size:10px; background:var(--p-line,#F3F0E8); padding:3px 7px; color:var(--p-text,#20242b);}" +
+".portfolio-doc .p-timeline-item{display:flex; gap:24px; margin-bottom:22px;}" +
+".portfolio-doc .p-timeline-item:last-child{margin-bottom:0;}" +
+".portfolio-doc .p-timeline-date{font-family:'IBM Plex Mono',monospace; font-size:11px; color:var(--p-soft,#8A93A0); width:120px; flex:none; padding-top:2px;}" +
+".portfolio-doc .p-timeline-body h4{font-size:15px; margin-bottom:4px; font-family:'Fraunces',serif; color:var(--p-text,#20242b);}" +
+".portfolio-doc .p-timeline-body .org{font-size:13px; color:var(--p-soft,#5B6472); margin-bottom:6px;}" +
+".portfolio-doc .p-timeline-body ul{margin:0; padding-left:18px;}" +
+".portfolio-doc .p-timeline-body li{font-size:13px; color:var(--p-text,#20242b); margin-bottom:3px;}" +
+".portfolio-doc .p-skills-wrap{display:flex; flex-wrap:wrap; gap:8px;}" +
+".portfolio-doc .r-skill-pill{font-size:11.5px; font-family:'IBM Plex Mono',monospace; border:1px solid var(--p-line,#DCD7CA); padding:4px 10px; color:var(--p-text,#3f4652);}" +
+".portfolio-doc .p-footer{padding:40px 56px; font-family:'IBM Plex Mono',monospace; font-size:12px; color:var(--p-soft,#8A93A0); display:flex; justify-content:space-between;}" +
+".portfolio-doc .p-latest-item{display:flex; gap:20px; padding:16px 0; border-bottom:1px solid var(--p-line,#ECE7DA);}" +
+".portfolio-doc .p-latest-item:last-child{border-bottom:none;}" +
+".portfolio-doc .p-latest-date{width:90px; flex:none; color:var(--p-soft,#8A93A0);}" +
+".portfolio-doc .p-latest-body h3{font-size:16px; margin-bottom:6px; font-family:'Fraunces',serif; color:var(--p-text,#20242b);}" +
+".portfolio-doc .p-latest-body p{font-size:13px; color:var(--p-soft,#5B6472); margin-bottom:6px;}" +
+".portfolio-doc .p-latest-body a{font-family:'IBM Plex Mono',monospace; font-size:11px; color:var(--accent); text-decoration:none;}" +
+".portfolio-doc.p-layout-sidebar .p-grid{display:grid; grid-template-columns:260px 1fr;}" +
+".portfolio-doc.p-layout-sidebar .p-side-wrap{border-right:1px solid var(--p-line,#ECE7DA); padding:56px 32px;}" +
+".portfolio-doc.p-layout-sidebar .p-side{position:sticky; top:24px;}" +
+".portfolio-doc.p-layout-sidebar .p-side .p-avatar{width:88px;height:88px;margin-bottom:16px;}" +
+".portfolio-doc.p-layout-sidebar .p-side-name{font-family:'Fraunces',serif; font-size:24px; margin-bottom:4px; font-weight:600; color:var(--p-text,#20242b);}" +
+".portfolio-doc.p-layout-sidebar .p-side-title{font-family:'IBM Plex Mono',monospace; font-size:12px; text-transform:uppercase; color:var(--accent); margin-bottom:14px;}" +
+".portfolio-doc.p-layout-sidebar .p-side-summary{font-size:13px; color:var(--p-soft,#5B6472); margin-bottom:16px;}" +
+".portfolio-doc.p-layout-sidebar .p-side-links{flex-direction:column; gap:8px; margin-bottom:20px;}" +
+".portfolio-doc.p-layout-sidebar .p-main-wrap .p-block{padding:40px;}" +
+".portfolio-doc.p-layout-sidebar .p-main-wrap .p-footer{padding:24px 40px;}" +
+".portfolio-doc.p-layout-banner .p-hero{background:var(--accent); padding:90px 56px;}" +
+".portfolio-doc.p-layout-banner .p-hero .p-summary, .portfolio-doc.p-layout-banner .p-hero .eyebrow{color:rgba(255,255,255,.85);}" +
+".portfolio-doc.p-layout-banner .p-hero .eyebrow::before{background:#fff;}" +
+".portfolio-doc.p-layout-banner .p-hero h1{color:#fff;}" +
+".portfolio-doc.p-layout-banner .p-hero .p-links a{color:#fff; border-bottom-color:rgba(255,255,255,.6);}" +
+".portfolio-doc.p-layout-banner .p-avatar{border-color:#fff;}" +
+".portfolio-doc.p-layout-boxed .p-block{margin:24px 32px; border:1px solid var(--p-line,#ECE7DA); padding:32px;}" +
+".portfolio-doc.p-layout-boxed .p-hero{margin:24px 32px 0; border:1px solid var(--p-line,#ECE7DA);}" +
+".portfolio-doc.p-layout-minimal .p-block{border-bottom:none; padding-top:34px; padding-bottom:34px;}" +
+".portfolio-doc.p-layout-minimal .p-block h2{font-size:11px; letter-spacing:.2em;}" +
+".portfolio-doc.p-layout-minimal .p-project-card{border:none; border-bottom:1px solid var(--p-line,#ECE7DA); padding:0 0 20px; background:transparent;}" +
+".portfolio-doc.p-type-serif .p-hero h1{font-family:'Playfair Display',serif;}" +
+".portfolio-doc.p-type-serif .p-block h2{font-family:'Playfair Display',serif; font-style:italic; text-transform:none; letter-spacing:.01em;}" +
+".portfolio-doc.p-type-serif .p-project-card h3, .portfolio-doc.p-type-serif .p-timeline-body h4, .portfolio-doc.p-type-serif .p-latest-body h3{font-family:'Playfair Display',serif;}" +
+".portfolio-doc.p-type-modern .p-hero h1{font-family:'Space Grotesk',sans-serif; letter-spacing:-.02em;}" +
+".portfolio-doc.p-type-modern .p-block h2{font-family:'Space Grotesk',sans-serif; font-weight:700; letter-spacing:.08em;}" +
+".portfolio-doc.p-type-modern .p-project-card h3, .portfolio-doc.p-type-modern .p-timeline-body h4, .portfolio-doc.p-type-modern .p-latest-body h3{font-family:'Space Grotesk',sans-serif; font-weight:600;}" +
+"@media(max-width:760px){.portfolio-doc.p-layout-sidebar .p-grid{grid-template-columns:1fr;} .portfolio-doc.p-layout-sidebar .p-side-wrap{border-right:none;border-bottom:1px solid var(--p-line,#ECE7DA);} .portfolio-doc .p-hero,.portfolio-doc .p-block,.portfolio-doc .p-footer{padding:34px 24px;}}";
+
+function injectPortfolioCSS(){
+  const tag = document.createElement('style');
+  tag.id = 'portfolioStyleTag';
+  tag.textContent = PORTFOLIO_CSS;
+  document.head.appendChild(tag);
+}
+
+/* ================= DOWNLOAD: RESUME PDF ================= */
+async function downloadResumePDF(){
+  const btn = event.target;
+  const originalText = btn.textContent;
+  btn.textContent = 'Preparing…'; btn.disabled = true;
+  try{
+    const el = document.getElementById('resumePaper');
+    const canvas = await html2canvas(el, {scale:2, backgroundColor:'#ffffff', useCORS:true});
+    const imgData = canvas.toDataURL('image/png');
+    const { jsPDF } = window.jspdf;
+    const pdf = new jsPDF('p','pt','a4');
+    const pageWidth = pdf.internal.pageSize.getWidth();
+    const pageHeight = pdf.internal.pageSize.getHeight();
+    const imgHeight = (canvas.height * pageWidth) / canvas.width;
+    let heightLeft = imgHeight;
+    let position = 0;
+    pdf.addImage(imgData, 'PNG', 0, position, pageWidth, imgHeight);
+    heightLeft -= pageHeight;
+    while(heightLeft > 0){
+      position = heightLeft - imgHeight;
+      pdf.addPage();
+      pdf.addImage(imgData, 'PNG', 0, position, pageWidth, imgHeight);
+      heightLeft -= pageHeight;
+    }
+    const name = (lastState.personal.fullName || 'resume').replace(/\s+/g,'_');
+    pdf.save(name + '_Resume.pdf');
+  } catch(err){
+    console.error(err);
+    alert('Could not generate the PDF in this environment. You can also use your browser\'s Print → Save as PDF on this page.');
+  } finally {
+    btn.textContent = originalText; btn.disabled = false;
+  }
+}
+
+/* ================= DOWNLOAD: PORTFOLIO HTML ================= */
+function downloadPortfolioHTML(){
+  const s = lastState;
+  const accentMap = {brass:'#A8823C', slate:'#3D5A6C', sage:'#5F7D5B', burgundy:'#8C3B3B'};
+  const accentHex = accentMap[s.accent] || accentMap.brass;
+  const portfolioResult = renderPortfolio(s);
+  const bg = s.portfolioBg;
+  const styleAttr = '--p-bg:' + bg.bg + ';--p-text:' + bg.text + ';--p-soft:' + bg.soft + ';--p-card:' + bg.card + ';--p-line:' + bg.line + ';';
+  const fontsLink = '<link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@600&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&family=Playfair+Display:ital,wght@0,600;1,500&family=Space+Grotesk:wght@600;700&display=swap" rel="stylesheet">';
+  const baseCss = "*{box-sizing:border-box;} html,body{margin:0;padding:0;} body{font-family:'IBM Plex Sans',sans-serif;} h1,h2,h3,h4{font-family:'Fraunces',serif; margin:0; font-weight:600;} p{margin:0;} .wrap-shell{max-width:900px;margin:0 auto; box-shadow:0 8px 24px rgba(27,36,48,.08);} :root{--accent:" + accentHex + ";}";
+  const doc = '<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">' +
+    '<title>' + escapeHtml(s.personal.fullName || 'Portfolio') + ' — Portfolio</title>' + fontsLink +
+    '<style>' + baseCss + PORTFOLIO_CSS + '</style></head><body>' +
+    '<div class="wrap-shell"><div class="portfolio-doc ' + portfolioResult.layoutClass + ' ' + portfolioResult.typeClass + '" style="' + styleAttr + '">' + portfolioResult.html + '</div></div>' +
+    '</body></html>';
+
+  const blob = new Blob([doc], {type:'text/html'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = (s.personal.fullName || 'portfolio').replace(/\s+/g,'_') + '_portfolio.html';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+/* ================= INIT ================= */
+injectPortfolioCSS();
+initTagInputs();
+addExperienceEntry();
+addEducationEntry();
+addProjectEntry();
+addLatestEntry();
+renderStyleGrid('resumeStyleGrid', RESUME_STYLES, selectedResumeStyleId, 'selectResumeStyle');
+renderStyleGrid('portfolioStyleGrid', PORTFOLIO_STYLES, selectedPortfolioStyleId, 'selectPortfolioStyle');
+renderBgGrid();
+renderTabs();
+updateStepUI();
+</script>
+</body>
+</html>
